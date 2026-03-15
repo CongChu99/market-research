@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# market-research CLI
+# Install the market-research AI skill into any project
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="${SCRIPT_DIR}/skill"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+usage() {
+  cat <<EOF
+${BOLD}market-research${NC} v${VERSION}
+
+AI skill for structured market & competitor analysis.
+
+${BOLD}USAGE${NC}
+  market-research <command> [options]
+
+${BOLD}COMMANDS${NC}
+  init          Install skill into current project (all platforms)
+  init --only   Install for specific platform(s) only
+  status        Check if skill is installed in current project
+  update        Re-install (overwrite) skill files in current project
+  uninstall     Remove skill from current project
+
+${BOLD}EXAMPLES${NC}
+  market-research init                          # Install for all platforms
+  market-research init --only claude            # Claude Code only
+  market-research init --only codex antigravity # Codex + Antigravity
+  market-research status                        # Check installation
+  market-research update                        # Update to latest version
+
+${BOLD}PLATFORMS${NC}
+  claude       → .claude/skills/market-research/
+  codex        → .codex/skills/market-research/
+  antigravity  → .agent/skills/market-research/
+  copilot      → .github/skills/market-research/
+
+EOF
+}
+
+PLATFORMS=(
+  "claude:.claude/skills/market-research"
+  "codex:.codex/skills/market-research"
+  "antigravity:.agent/skills/market-research"
+  "copilot:.github/skills/market-research"
+)
+
+SKILL_FILES=("SKILL.md" "prompt.md" "template.md")
+
+get_platform_dir() {
+  local entry="$1"
+  echo "${entry#*:}"
+}
+
+get_platform_name() {
+  local entry="$1"
+  echo "${entry%%:*}"
+}
+
+check_skill_source() {
+  for f in "${SKILL_FILES[@]}"; do
+    if [[ ! -f "${SKILL_DIR}/${f}" ]]; then
+      echo -e "${RED}✗ Missing source file: ${SKILL_DIR}/${f}${NC}"
+      echo -e "  Re-download or re-clone the market-research repo."
+      exit 1
+    fi
+  done
+}
+
+install_platform() {
+  local name="$1"
+  local dir="$2"
+  
+  mkdir -p "${dir}"
+  for f in "${SKILL_FILES[@]}"; do
+    cp "${SKILL_DIR}/${f}" "${dir}/${f}"
+  done
+  echo -e "  ${GREEN}✓${NC} ${BOLD}${name}${NC} → ${dir}/"
+}
+
+cmd_init() {
+  local filter=()
+  local only_mode=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --only) only_mode=true; shift ;;
+      *) filter+=("$1"); shift ;;
+    esac
+  done
+
+  check_skill_source
+
+  echo -e "${CYAN}${BOLD}Installing market-research skill...${NC}"
+  echo ""
+
+  local count=0
+  for entry in "${PLATFORMS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if $only_mode && [[ ${#filter[@]} -gt 0 ]]; then
+      local match=false
+      for f in "${filter[@]}"; do
+        [[ "$f" == "$name" ]] && match=true
+      done
+      $match || continue
+    fi
+
+    install_platform "$name" "$dir"
+    count=$((count+1))
+  done
+
+  echo ""
+  if [[ $count -eq 0 ]]; then
+    echo -e "${YELLOW}No platforms matched. Available: claude, codex, antigravity, copilot${NC}"
+    exit 1
+  fi
+  echo -e "${GREEN}${BOLD}Done!${NC} Installed to ${count} platform(s)."
+  echo ""
+  echo -e "Use the skill by asking your AI agent:"
+  echo -e "  ${CYAN}/market-research \"your product idea here\"${NC}"
+}
+
+cmd_status() {
+  echo -e "${BOLD}market-research skill status:${NC}"
+  echo ""
+
+  local installed=0
+  for entry in "${PLATFORMS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if [[ -f "${dir}/SKILL.md" ]]; then
+      echo -e "  ${GREEN}✓${NC} ${name} — ${dir}/"
+      installed=$((installed+1))
+    else
+      echo -e "  ${RED}✗${NC} ${name} — not installed"
+    fi
+  done
+
+  echo ""
+  echo -e "Installed: ${installed}/${#PLATFORMS[@]} platforms"
+}
+
+cmd_update() {
+  check_skill_source
+
+  echo -e "${CYAN}${BOLD}Updating market-research skill...${NC}"
+  echo ""
+
+  local count=0
+  for entry in "${PLATFORMS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if [[ -d "${dir}" ]]; then
+      install_platform "$name" "$dir"
+      count=$((count+1))
+    fi
+  done
+
+  echo ""
+  if [[ $count -eq 0 ]]; then
+    echo -e "${YELLOW}No installed platforms found. Run 'market-research init' first.${NC}"
+  else
+    echo -e "${GREEN}${BOLD}Done!${NC} Updated ${count} platform(s)."
+  fi
+}
+
+cmd_uninstall() {
+  echo -e "${CYAN}${BOLD}Removing market-research skill...${NC}"
+  echo ""
+
+  local count=0
+  for entry in "${PLATFORMS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if [[ -d "${dir}" ]]; then
+      rm -rf "${dir}"
+      echo -e "  ${GREEN}✓${NC} Removed ${name} — ${dir}/"
+      count=$((count+1))
+    fi
+  done
+
+  echo ""
+  if [[ $count -eq 0 ]]; then
+    echo -e "${YELLOW}Nothing to remove — skill not installed.${NC}"
+  else
+    echo -e "${GREEN}${BOLD}Done!${NC} Removed from ${count} platform(s)."
+  fi
+}
+
+# --- Main ---
+case "${1:-}" in
+  init)      shift; cmd_init "$@" ;;
+  status)    cmd_status ;;
+  update)    cmd_update ;;
+  uninstall) cmd_uninstall ;;
+  --version) echo "market-research v${VERSION}" ;;
+  --help|-h) usage ;;
+  "")        usage ;;
+  *)
+    echo -e "${RED}Unknown command: $1${NC}"
+    echo "Run 'market-research --help' for usage."
+    exit 1
+    ;;
+esac
