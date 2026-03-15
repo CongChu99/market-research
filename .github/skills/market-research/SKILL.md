@@ -44,6 +44,13 @@ Run this skill **before** creating an OpenSpec change. The output feeds directly
 
 Activate research mode by appending `--research` or stating "use research mode".
 
+## Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--research` | Enable deep web search mode | Off (fast mode) |
+| `--output <path>` | Custom output file path | `.ai/research/<name>-market-analysis.md` |
+
 ## Output
 
 Always writes to: `.ai/research/<product-name>-market-analysis.md`
@@ -59,6 +66,7 @@ Follow `prompt.md` step by step.
 ```
 /market-research "your idea here"
 /market-research "your idea here" --research
+/market-research "your idea here" --output docs/analysis.md
 /market-research idea.md
 ```
 

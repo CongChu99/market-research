@@ -116,6 +116,14 @@ Searches the web for each competitor — pricing, features, reviews. Best for se
 /market-research "meal planning app for busy parents" --research
 ```
 
+### Custom output path
+
+Save the analysis to a custom location:
+
+```
+/market-research "meal planning app" --output docs/market-analysis.md
+```
+
 ### Structured input
 
 Provide detailed context for more targeted analysis:
@@ -183,6 +191,10 @@ market-research "your idea"
   └─────────────────────────────────────────┘
 ```
 
+## Example Output
+
+See [`examples/personal-finance-market-analysis.md`](examples/personal-finance-market-analysis.md) for a complete example of what the skill produces.
+
 ## CLI Reference
 
 | Command | Description |
@@ -216,8 +228,19 @@ README.md                # This file
 install.sh               # One-liner installer
 skill/
 ├── SKILL.md             # Skill entry point — loaded by AI agents
-├── prompt.md            # 9-step execution instructions
-└── template.md          # Output artifact template
+├── prompt.md            # 9-step execution instructions + validation
+├── template.md          # Output artifact template
+├── project-docs/        # Documentation skill (auto-export)
+│   ├── SKILL.md
+│   ├── prompt.md
+│   └── templates/
+│       ├── design.md
+│       ├── plan.md
+│       └── changelog.md
+└── workflows/
+    └── build-with-superpowers.md
+examples/
+└── personal-finance-market-analysis.md  # Example output
 ```
 
 ## Supported AI Tools

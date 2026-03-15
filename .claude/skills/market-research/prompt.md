@@ -41,7 +41,9 @@ After parsing, confirm your understanding in one short paragraph before proceedi
 
 ---
 
-## Step 2: Determine Execution Mode
+## Step 2: Determine Execution Mode & Options
+
+**Mode:**
 
 | Condition | Mode |
 |-----------|------|
@@ -49,11 +51,26 @@ After parsing, confirm your understanding in one short paragraph before proceedi
 | User said "use research mode" or "deep research" | `research` |
 | No flag specified | `fast` (default) |
 
+**Output path:**
+
+| Condition | Output path |
+|-----------|-------------|
+| User passed `--output <path>` | Use the specified `<path>` exactly |
+| No `--output` flag | Default: `.ai/research/<product-name>-market-analysis.md` |
+
+Store the resolved output path for use in Step 8.
+
 In **fast mode**: Use only internal knowledge. No web search.
 In **research mode**: Search the web for each competitor. Perform separate searches for:
 - `"<competitor name> pricing"`
 - `"<competitor name> features"`
 - `"<competitor name> reviews site:reddit.com OR site:producthunt.com"`
+
+**Research mode — rate limiting & retry:**
+- Wait 1–2 seconds between separate web searches to avoid rate limits
+- If a search fails or returns no useful results, retry once with a broader query (e.g., drop site: filter)
+- If retry also fails, mark data as `?` and note "search failed" in the Sources section
+- Maximum 3 searches per competitor (pricing, features, reviews)
 
 Collect all source URLs used — they will be listed in the `## Sources` section of the output.
 
@@ -165,17 +182,38 @@ Format:
 
 Derive a kebab-case product name from the idea (e.g., "app quản lý chi tiêu" → `quan-ly-chi-tieu`).
 
-Create directory if needed:
+Determine output path:
+- If `--output` was specified in Step 2: use that path exactly
+- Otherwise: use `.ai/research/<product-name>-market-analysis.md`
+
+Create the parent directory if needed:
 ```bash
-mkdir -p .ai/research
+mkdir -p $(dirname "<output-path>")
 ```
 
-Write the completed analysis to `.ai/research/<product-name>-market-analysis.md` using `template.md` as the structure.
+Write the completed analysis to the output path using `template.md` as the structure.
 
 Fill every section. Do not leave placeholders. Do not copy `template.md` comments into the output.
 
 **Fast mode only:** Add a disclaimer at the top of the artifact:
 > ⚠️ This analysis was generated in **fast mode** using AI internal knowledge only. Competitor data (pricing, features, market position) may be outdated. Run with `--research` for verified, current data.
+
+---
+
+## Step 8.5: Validate Output
+
+Before finalizing, verify the artifact passes this checklist:
+
+- [ ] All 10 sections are present and non-empty (Problem → Notes)
+- [ ] Feature comparison has ≥ 10 features and ≥ 4 competitors
+- [ ] Gap analysis has entries in at least 3 of 5 gap categories
+- [ ] Differentiation strategy has ≥ 3 specific (not generic) points
+- [ ] MVP scope has 5–10 features with priority labels
+- [ ] Fast mode: disclaimer is present at top
+- [ ] Research mode: Sources section has ≥ 5 URLs with descriptions
+- [ ] No template placeholders remain (no `{{...}}`, no `<!-- ... -->`)
+
+If any check fails, fix it before proceeding.
 
 ---
 

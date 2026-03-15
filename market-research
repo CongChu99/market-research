@@ -7,6 +7,8 @@ set -euo pipefail
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 SKILL_DIR="${SCRIPT_DIR}/skill"
+PROJECT_DOCS_DIR="${SCRIPT_DIR}/skill/project-docs"
+WORKFLOW_DIR="${SCRIPT_DIR}/skill/workflows"
 
 # Colors
 RED='\033[0;31m'
@@ -55,6 +57,20 @@ PLATFORMS=(
   "copilot:.github/skills/market-research"
 )
 
+DOCS_PLATFORMS=(
+  "claude:.claude/skills/project-docs"
+  "codex:.codex/skills/project-docs"
+  "antigravity:.agent/skills/project-docs"
+  "copilot:.github/skills/project-docs"
+)
+
+WORKFLOW_TARGETS=(
+  "claude:.claude/commands/build-with-superpowers"
+  "codex:.codex/skills"
+  "antigravity:.agent/workflows"
+  "copilot:.github/skills"
+)
+
 SKILL_FILES=("SKILL.md" "prompt.md" "template.md")
 
 get_platform_dir() {
@@ -85,7 +101,31 @@ install_platform() {
   for f in "${SKILL_FILES[@]}"; do
     cp "${SKILL_DIR}/${f}" "${dir}/${f}"
   done
-  echo -e "  ${GREEN}✓${NC} ${BOLD}${name}${NC} → ${dir}/"
+  echo -e "  ${GREEN}✓${NC} ${BOLD}${name}${NC} market-research → ${dir}/"
+}
+
+install_project_docs() {
+  local name="$1"
+  local dir="$2"
+  
+  if [[ ! -d "${PROJECT_DOCS_DIR}" ]]; then
+    return
+  fi
+  mkdir -p "${dir}"
+  cp -r "${PROJECT_DOCS_DIR}/"* "${dir}/"
+  echo -e "  ${GREEN}✓${NC} ${BOLD}${name}${NC} project-docs → ${dir}/"
+}
+
+install_workflow() {
+  local name="$1"
+  local dir="$2"
+  
+  if [[ ! -d "${WORKFLOW_DIR}" ]]; then
+    return
+  fi
+  mkdir -p "${dir}"
+  cp "${WORKFLOW_DIR}/build-with-superpowers.md" "${dir}/build-with-superpowers.md"
+  echo -e "  ${GREEN}✓${NC} ${BOLD}${name}${NC} workflow → ${dir}/"
 }
 
 cmd_init() {
@@ -122,15 +162,52 @@ cmd_init() {
     count=$((count+1))
   done
 
+  # Install project-docs to matching platforms
+  for entry in "${DOCS_PLATFORMS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if $only_mode && [[ ${#filter[@]} -gt 0 ]]; then
+      local match=false
+      for f in "${filter[@]}"; do
+        [[ "$f" == "$name" ]] && match=true
+      done
+      $match || continue
+    fi
+
+    install_project_docs "$name" "$dir"
+  done
+
+  # Install workflow to matching platforms
+  for entry in "${WORKFLOW_TARGETS[@]}"; do
+    local name dir
+    name=$(get_platform_name "$entry")
+    dir=$(get_platform_dir "$entry")
+
+    if $only_mode && [[ ${#filter[@]} -gt 0 ]]; then
+      local match=false
+      for f in "${filter[@]}"; do
+        [[ "$f" == "$name" ]] && match=true
+      done
+      $match || continue
+    fi
+
+    install_workflow "$name" "$dir"
+  done
+
   echo ""
   if [[ $count -eq 0 ]]; then
     echo -e "${YELLOW}No platforms matched. Available: claude, codex, antigravity, copilot${NC}"
     exit 1
   fi
   echo -e "${GREEN}${BOLD}Done!${NC} Installed to ${count} platform(s)."
+  echo -e "  Skills: market-research, project-docs"
+  echo -e "  Workflow: build-with-superpowers"
   echo ""
   echo -e "Use the skill by asking your AI agent:"
   echo -e "  ${CYAN}/market-research \"your product idea here\"${NC}"
+  echo -e "  ${CYAN}/build-with-superpowers${NC}"
 }
 
 cmd_status() {
