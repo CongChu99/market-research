@@ -4,7 +4,7 @@ set -euo pipefail
 # market-research installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/<user>/market-research/main/install.sh | bash
 
-REPO="https://github.com/<your-username>/market-research.git"
+REPO="https://github.com/CongChu99/market-research.git"
 INSTALL_DIR="${HOME}/.market-research"
 BIN_LINK="/usr/local/bin/market-research"
 

@@ -31,7 +31,7 @@ AI: Deep research mode — searching the web for each competitor...
 Install globally:
 
 ```bash
-git clone https://github.com/<your-username>/market-research.git
+git clone https://github.com/CongChu99/market-research.git
 cd market-research
 sudo ln -sf $(pwd)/market-research /usr/local/bin/market-research
 ```
@@ -57,7 +57,7 @@ Now tell your AI: `/market-research "your product idea"`
 
 ```bash
 # Clone and link (one-time setup)
-git clone https://github.com/<your-username>/market-research.git ~/.market-research
+git clone https://github.com/CongChu99/market-research.git ~/.market-research
 sudo ln -sf ~/.market-research/market-research /usr/local/bin/market-research
 
 # Now use anywhere:
@@ -69,14 +69,14 @@ market-research init
 
 ```bash
 # Download and install in one command
-curl -fsSL https://raw.githubusercontent.com/<your-username>/market-research/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/CongChu99/market-research/main/install.sh | bash
 ```
 
 ### Option 3: Manual copy
 
 ```bash
 # Clone the repo
-git clone https://github.com/<your-username>/market-research.git
+git clone https://github.com/CongChu99/market-research.git
 
 # Copy skill files into your project
 cd your-project
